@@ -273,7 +273,7 @@ const ModalSystem = {
 ### **🔍 Monitoring & Logging**
 - **Error Tracking** with detailed stack traces
 - **API Usage Analytics** with rate limit monitoring
-- **Security Audit Logs** for sensitive operations
+- **Security Audit Logs** for sensitive  operations
 
 
 
