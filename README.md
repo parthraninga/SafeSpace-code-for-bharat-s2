@@ -343,7 +343,7 @@ POST /api/notifications/subscribe   // Push notification subscription
 - **Pranjal** - Team Member - [GitHub](https://github.com/pranjal29092005)
 - **Pawan** - Team Member - [GitHub](https://github.com/Pawan4356)
 - **Parth** - Team Member - [GitHub](https://github.com/parthraninga)
-- **Team SafeSpace** - [Project Repository](https://github.com/Pushkar111/SafeSpace-Code-for-bharat)
+- **Team SafeSpace** - [Project Repository](https://github.com/Pushkar111/SafeSpace-code-for-bharat-s2.git)
 
 
 
