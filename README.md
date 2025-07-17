@@ -24,6 +24,36 @@ In India's rapidly growing urban landscape, citizens face numerous safety challe
 
 **SafeSpace** addresses these challenges with an AI-powered, real-time threat intelligence platform that empowers citizens, authorities, and communities to stay safe and informed.
 
+## 🌄 **Preview**
+
+### 🏠 **Home Page**
+![Home Page](screenshots/1.png)
+
+### 🔐 **Log-in / Sign-up**
+![Log-in/Sign-up](screenshots/6.png)
+
+### 📊 **Dashboard**
+![Dashboard](screenshots/7.png)
+
+### 🗺️ **Threat Heatmap**
+![Threat Heatmap](screenshots/8.png)
+
+### 📰 **Fetched News**
+![Fetched News](screenshots/9.png)
+
+### 🛡️ **Safety Suggestion**
+![Safety Suggestion](screenshots/10.png)
+
+### 🔔 **Notification Setting**
+![Notification Setting](screenshots/11.png)
+
+### 👤 **Profile Page**
+![Profile Page](screenshots/12.png)
+
+### ⚙️ **Profile Setting**
+![Profile Setting](screenshots/13.png)
+
+
 ## ✨ **Key Features**
 
 ### 🧠 **AI-Powered Threat Intelligence**
@@ -273,7 +303,7 @@ const ModalSystem = {
 ### **🔍 Monitoring & Logging**
 - **Error Tracking** with detailed stack traces
 - **API Usage Analytics** with rate limit monitoring
-- **Security Audit Logs** for sensitive  operations
+- **Security Audit Logs** for sensitive operations
 
 
 
@@ -339,19 +369,17 @@ POST /api/notifications/subscribe   // Push notification subscription
 ## 📞 **Contact & Support**
 
 ### **👨‍💻 Development Team**
-- **Pushkar** - Lead Developer - [GitHub](https://github.com/Pushkar111)
-- **Pranjal** - Team Member - [GitHub](https://github.com/pranjal29092005)
-- **Pawan** - Team Member - [GitHub](https://github.com/Pawan4356)
-- **Parth** - Team Member - [GitHub](https://github.com/parthraninga)
-- **Team SafeSpace** - [Project Repository](https://github.com/Pushkar111/SafeSpace-code-for-bharat-s2.git)
+- *[Pushkar](https://github.com/Pushkar111)*- Lead Developer
+- *[Pranjal](https://github.com/pranjal29092005)*- Team Member
+- *[Pawan](https://github.com/Pawan4356)*- Team Member
+- *[Parth](https://github.com/parthraninga)*- Team Member
+- **Team SafeSpace** - [Project Repository](https://github.com/Pushkar111/SafeSpace-Code-for-bharat)
 
 
 
   **🌟 Star this repository if SafeSpace helped make your community safer! 🌟**
   
   <p><em>Built with ❤️ in India 🇮🇳 for a safer tomorrow</em></p>
-  
-  <img src="https://img.shields.io/badge/Made%20with-❤️%20in%20India-orange?style=for-the-badge" alt="Made with Love in India" />
   
 </div>
 
