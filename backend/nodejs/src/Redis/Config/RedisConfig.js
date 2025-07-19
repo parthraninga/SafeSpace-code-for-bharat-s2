@@ -4,13 +4,7 @@ dotenv.config();
 
 const useTLS = process.env.REDIS_TLS === "true";
 
-const redisConnection = new Redis({
-  host: process.env.REDIS_HOST || "localhost",
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || "",
-  tls: useTLS ? {} : undefined,
-  maxRetriesPerRequest: null
-});
+const redisConnection = Redis(process.env.REDIS_URL);
 
 redisConnection.on("connect", () => {
   console.log("✅ Redis connected successfully");
