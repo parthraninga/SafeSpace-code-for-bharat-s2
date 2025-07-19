@@ -23,7 +23,7 @@ const app = express();
 
 // CORS configuration for SafeSpace frontend
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://safe-space-code-for-bharat-s2-git-main-pushkar111s-projects.vercel.app'],
     credentials: true
 }));
 
