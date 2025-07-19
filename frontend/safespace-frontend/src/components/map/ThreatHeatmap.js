@@ -61,7 +61,7 @@ const MAJOR_INDIAN_CITIES = {
     Ludhiana: { coords: [30.901, 75.8573], state: "Punjab", region: "North" },
 };
 
-// Custom threat level icons
+// Custom threat level icons with improved hover stability
 const createThreatIcon = (level, size = "medium") => {
     const colors = {
         high: "#DC2626",
