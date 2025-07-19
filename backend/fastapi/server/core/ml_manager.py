@@ -206,23 +206,23 @@ class MLManager:
                         if len(raw_prediction) > 0:
                             pred_val = raw_prediction[0]
                             if isinstance(pred_val, (list, np.ndarray)) and len(pred_val) > 0:
-                                # Convert to int safely
+                                # Handle numeric prediction values safely
                                 try:
                                     sentiment_prediction = int(pred_val[0])
                                 except (ValueError, TypeError):
-                                    logger.warning(f"Could not convert to int: {pred_val[0]}")
+                                    # Handle non-numeric predictions gracefully
+                                    logger.debug(f"Non-numeric prediction value: {pred_val[0]}, using default")
                                     sentiment_prediction = 0
                             elif isinstance(pred_val, (int, float, np.integer, np.floating)):
-                                # Convert to int safely
+                                # Handle numeric prediction values safely
                                 try:
                                     sentiment_prediction = int(pred_val)
                                 except (ValueError, TypeError):
-                                    logger.warning(f"Could not convert to int: {pred_val}")
+                                    # Handle non-numeric predictions gracefully
+                                    logger.debug(f"Non-numeric prediction value: {pred_val}, using default")
                                     sentiment_prediction = 0
                             elif isinstance(pred_val, dict):
-                                logger.info(f"Received dictionary prediction format: {pred_val}")
-                                
-                                # Extract label and score from dictionary
+                                # Handle dictionary prediction format (common with transformers models)
                                 label = pred_val.get("label", "").lower()
                                 score = pred_val.get("score", 0.0)
                                 
@@ -240,16 +240,19 @@ class MLManager:
                                 
                                 # Use the score from the prediction
                                 sentiment_confidence = float(score)
+                                logger.debug(f"Processed emotion '{label}' -> sentiment: {sentiment_prediction} (confidence: {sentiment_confidence})")
                             else:
                                 logger.warning(f"Unexpected sentiment prediction format: {type(pred_val)} - {pred_val}")
                                 sentiment_prediction = 0
                         else:
                             sentiment_prediction = 0
                     elif isinstance(raw_prediction, (int, float, np.integer, np.floating)):
+                        # Handle single numeric prediction values safely
                         try:
                             sentiment_prediction = int(raw_prediction)
                         except (ValueError, TypeError):
-                            logger.warning(f"Could not convert to int: {raw_prediction}")
+                            # Handle non-numeric predictions gracefully
+                            logger.debug(f"Non-numeric raw prediction: {raw_prediction}, using default")
                             sentiment_prediction = 0
                     else:
                         logger.warning(f"Unexpected sentiment prediction type: {type(raw_prediction)} - {raw_prediction}")

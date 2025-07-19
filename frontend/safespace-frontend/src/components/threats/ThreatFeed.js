@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FunnelIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import ThreatCard from './ThreatCard';
 import ThreatModal from './ThreatModal';
 import { getThreats, saveThreat, getSavedThreats } from '../../utils/api';
@@ -15,6 +15,14 @@ const ThreatFeed = ({ selectedCity, searchFilter }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterLevel, setFilterLevel] = useState('all');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasMore: false
+  });
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Ref to track the latest request and prevent race conditions
   const loadingRef = useRef(false);
@@ -60,57 +68,90 @@ const ThreatFeed = ({ selectedCity, searchFilter }) => {
     }
   }, []);
 
-  const loadThreats = useCallback(async () => {
-    const location = selectedCity?.city || selectedCity?.name || 'Delhi';
-    
-    // Prevent duplicate requests for the same location
-    if (loadingRef.current) {
-      console.log(`⏭️ Skipping request - already loading for: ${location}`);
-      return;
-    }
-    
-    // Check if we already loaded this location recently (and have data)
-    if (lastLocationRef.current === location) {
-      console.log(`✅ Already have data for: ${location}`);
-      return;
-    }
-    
-    loadingRef.current = true;
+const loadThreats = useCallback(async (page = 1, append = false) => {
+  const location = selectedCity?.city || selectedCity?.name || 'Delhi';
+  
+  if (loadingRef.current) {
+    console.log(`⏭️ Skipping request - already loading for: ${location} (page ${page})`);
+    return;
+  }
+  
+  if (page === 1 && !append && lastLocationRef.current === location && threats.length > 0) {
+    console.log(`✅ Already have data for: ${location}`);
+    return;
+  }
+  
+  loadingRef.current = true;
+  if (page === 1 && !append) {
     setIsLoading(true);
+  } else {
+    setIsLoadingMore(true);
+  }
+  
+  try {
+    console.log(`🔄 Loading threats for: ${location} (page ${page})`);
     
-    try {
-      console.log(`🔄 Loading threats for: ${location}`);
-      
-      const threatsResponse = await getThreats(location);
-      
-      // Handle different response structures
-      let threatsData = [];
-      if (Array.isArray(threatsResponse)) {
-        threatsData = threatsResponse;
-      } else if (threatsResponse && Array.isArray(threatsResponse.threats)) {
-        threatsData = threatsResponse.threats;
-      } else if (threatsResponse && Array.isArray(threatsResponse.data)) {
-        threatsData = threatsResponse.data;
-      }
-      
-      console.log(`✅ Loaded ${threatsData.length} threats for ${location}`);
-      setThreats(threatsData);
-      lastLocationRef.current = location; // Mark as loaded after success
-    } catch (error) {
-      // Handle cancellation errors gracefully
-      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-        console.log('Request was canceled (timeout or component unmount)');
-        return; // Don't show error for canceled requests
-      }
-      
-      console.error('Failed to fetch threats:', error);
-      toast.error('Failed to load threats');
-      setThreats([]);
-    } finally {
-      setIsLoading(false);
-      loadingRef.current = false;
+    const threatsResponse = await getThreats(location, page, 20);
+    
+    // Handle cancellation gracefully
+    if (threatsResponse && (threatsResponse.isCanceled || threatsResponse.isTimeout)) {
+      console.log('Request was canceled or timed out, skipping update');
+      return;
     }
-  }, [selectedCity]);
+    
+    let threatsData = [];
+    let paginationData = {
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 0,
+      hasMore: false
+    };
+    
+    if (threatsResponse && threatsResponse.threats) {
+      threatsData = threatsResponse.threats;
+      paginationData = threatsResponse.pagination;
+      console.log(`✅ Loaded ${threatsData.length} threats for ${location} (page ${page}/${paginationData.totalPages}, total: ${paginationData.total})`);
+    } else if (Array.isArray(threatsResponse)) {
+      threatsData = threatsResponse;
+      console.log(`✅ Loaded ${threatsData.length} threats for ${location} (fallback format)`);
+    } else if (threatsResponse && Array.isArray(threatsResponse.threats)) {
+      threatsData = threatsResponse.threats;
+    } else if (threatsResponse && Array.isArray(threatsResponse.data)) {
+      threatsData = threatsResponse.data;
+    }
+    
+    if (page === 1 || !append) {
+      setThreats(threatsData);
+      lastLocationRef.current = location;
+    } else {
+      setThreats(prevThreats => {
+        const existingIds = new Set(prevThreats.map(t => t.id));
+        const newThreats = threatsData.filter(t => !existingIds.has(t.id));
+        return [...prevThreats, ...newThreats];
+      });
+    }
+    
+    setPagination(paginationData);
+    
+  } catch (error) {
+    // Handle cancellation errors gracefully - don't show error to user
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      console.log('Request was canceled (timeout or component unmount)');
+      return;
+    }
+    
+    console.error('Failed to fetch threats:', error);
+    toast.error('Failed to load threats');
+    if (page === 1 || !append) {
+      setThreats([]);
+    }
+  } finally {
+    setIsLoading(false);
+    setIsLoadingMore(false);
+    loadingRef.current = false;
+  }
+}, [selectedCity, threats.length]);
 
   // Initial load effect
   useEffect(() => {
@@ -325,12 +366,40 @@ const ThreatFeed = ({ selectedCity, searchFilter }) => {
         </div>
       </div>
 
-      {/* Threat count */}
+      {/* Threat count and load more */}
       <div className="flex items-center justify-between">
         <p className="text-gray-600">
-          Showing {filteredThreats.length} of {threats.length} threats
+          Showing {filteredThreats.length} of {pagination.total > 0 ? pagination.total : threats.length} threats
           {selectedCity && ` in ${selectedCity.city || selectedCity.name}`}
+          {pagination.total > threats.length && (
+            <span className="text-primary-600 ml-2">
+              ({threats.length} loaded, {pagination.total - threats.length} more available)
+            </span>
+          )}
         </p>
+        
+        {/* Load More Button */}
+        {pagination.hasMore && !isLoading && (
+          <motion.button
+            onClick={() => loadThreats(pagination.page + 1, true)}
+            disabled={isLoadingMore}
+            className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isLoadingMore ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <>
+                <span>Load More</span>
+                <ChevronDownIcon className="h-4 w-4" />
+              </>
+            )}
+          </motion.button>
+        )}
       </div>
 
       {/* Loading state */}

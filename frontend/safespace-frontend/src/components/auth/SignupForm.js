@@ -88,7 +88,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,16 +103,16 @@ const SignupForm = () => {
           >
             <span className="text-white font-bold text-xl">🛡️</span>
           </motion.div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Join SafeSpace
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
             Create your account and stay safe in Indian cities
           </p>
         </div>
 
         <motion.form
-          className="mt-8 space-y-6 glass-morphism p-8 rounded-2xl"
+          className="mt-8 space-y-6 glass-morphism bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg p-8 rounded-2xl border border-white/20 dark:border-gray-700/20"
           onSubmit={handleSubmit(onSubmit)}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -120,7 +120,7 @@ const SignupForm = () => {
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Full Name
               </label>
               <input
@@ -133,16 +133,16 @@ const SignupForm = () => {
                 })}
                 type="text"
                 autoComplete="name"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your full name"
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email address
               </label>
               <input
@@ -155,16 +155,16 @@ const SignupForm = () => {
                 })}
                 type="email"
                 autoComplete="email"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your email"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Mobile Number
               </label>
               <input
@@ -177,16 +177,16 @@ const SignupForm = () => {
                 })}
                 type="tel"
                 autoComplete="tel"
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your mobile number"
               />
               {errors.mobile && (
-                <p className="mt-1 text-sm text-red-600">{errors.mobile.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.mobile.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -200,7 +200,7 @@ const SignupForm = () => {
                   })}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                   placeholder="Create a password"
                 />
                 <button
@@ -218,7 +218,7 @@ const SignupForm = () => {
               {password && (
                 <div className="mt-2">
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor(
                           passwordStrength(password)
@@ -226,19 +226,19 @@ const SignupForm = () => {
                         style={{ width: `${(passwordStrength(password) / 5) * 100}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
                       {getStrengthText(passwordStrength(password))}
                     </span>
                   </div>
                 </div>
               )}
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Confirm Password
               </label>
               <div className="mt-1 relative">
@@ -249,7 +249,7 @@ const SignupForm = () => {
                   })}
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                   placeholder="Confirm your password"
                 />
                 <button
@@ -265,7 +265,7 @@ const SignupForm = () => {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
               )}
             </div>
           </div>
@@ -279,7 +279,7 @@ const SignupForm = () => {
               onChange={(e) => setAgreeToTerms(e.target.checked)}
               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
-            <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
+            <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900 dark:text-white">
               I agree to the{' '}
               <Link to="/terms" className="text-primary-600 hover:text-primary-500">
                 Terms and Conditions
@@ -311,17 +311,17 @@ const SignupForm = () => {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
               </div>
             </div>
 
             <motion.button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -348,7 +348,7 @@ const SignupForm = () => {
           </div>
 
           <div className="text-center">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
               <Link
                 to="/login"

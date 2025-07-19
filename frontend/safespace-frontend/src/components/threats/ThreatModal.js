@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog } from '@headlessui/react';
 import {
@@ -12,8 +12,56 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { generateSafetyAdvice } from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const ThreatModal = ({ threat, isOpen, onClose, onSave, isSaved = false }) => {
+  const [aiAdvice, setAiAdvice] = useState([]);
+  const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
+  const [adviceError, setAdviceError] = useState(null);
+
+  // Fetch AI advice when modal opens or threat changes
+  const fetchAIAdvice = useCallback(async () => {
+    if (!threat || !threat.title) return;
+    
+    try {
+      setIsLoadingAdvice(true);
+      setAdviceError(null);
+      
+      console.log('🤖 Fetching AI advice for:', threat.title);
+      
+      const response = await generateSafetyAdvice(
+        threat.title,
+        threat.description || threat.summary || "",
+        true, // useAI
+        threat.location
+      );
+
+      if (response.success && response.advice && response.advice.safety_advice) {
+        setAiAdvice(response.advice.safety_advice);
+        console.log('✅ AI advice received:', response.advice.safety_advice);
+      } else {
+        console.warn('⚠️ No AI advice in response:', response);
+        // Fallback to existing advice if available
+        setAiAdvice(threat.aiAdvice || []);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching AI advice:', error);
+      setAdviceError('Unable to generate AI recommendations');
+      // Fallback to existing advice if available
+      setAiAdvice(threat.aiAdvice || []);
+      toast.error('Failed to generate AI recommendations');
+    } finally {
+      setIsLoadingAdvice(false);
+    }
+  }, [threat]);
+
+  useEffect(() => {
+    if (isOpen && threat && threat.title) {
+      fetchAIAdvice();
+    }
+  }, [isOpen, threat, fetchAIAdvice]);
+
   if (!threat) return null;
 
   const getThreatLevelColor = (level) => {
@@ -192,22 +240,53 @@ const ThreatModal = ({ threat, isOpen, onClose, onSave, isSaved = false }) => {
                   </div>
 
                   {/* AI-Generated Safety Advice */}
-                  {threat.aiAdvice && threat.aiAdvice.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-blue-50 rounded-lg p-4 border border-blue-200"
-                    >
-                      <div className="flex items-center mb-3">
-                        <LightBulbIcon className="h-5 w-5 text-blue-600 mr-2" />
-                        <h4 className="text-lg font-semibold text-blue-900">
-                          AI-Powered Safety Recommendations
-                        </h4>
-                      </div>
-                      
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-blue-50 rounded-lg p-4 border border-blue-200"
+                  >
+                    <div className="flex items-center mb-3">
+                      <LightBulbIcon className="h-5 w-5 text-blue-600 mr-2" />
+                      <h4 className="text-lg font-semibold text-blue-900">
+                        AI-Powered Safety Recommendations
+                      </h4>
+                      {isLoadingAdvice && (
+                        <div className="ml-auto">
+                          <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {isLoadingAdvice ? (
                       <div className="space-y-2">
-                        {threat.aiAdvice.map((advice, index) => (
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-gray-300 rounded-full mt-2 mr-3 flex-shrink-0 animate-pulse"></div>
+                          <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-gray-300 rounded-full mt-2 mr-3 flex-shrink-0 animate-pulse"></div>
+                          <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3"></div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-gray-300 rounded-full mt-2 mr-3 flex-shrink-0 animate-pulse"></div>
+                          <div className="h-4 bg-gray-300 rounded animate-pulse w-3/5"></div>
+                        </div>
+                      </div>
+                    ) : adviceError ? (
+                      <div className="text-red-600 text-sm flex items-center">
+                        <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
+                        {adviceError}
+                        <button 
+                          onClick={fetchAIAdvice}
+                          className="ml-2 text-blue-600 underline hover:text-blue-800"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    ) : aiAdvice && aiAdvice.length > 0 ? (
+                      <div className="space-y-2">
+                        {aiAdvice.map((advice, index) => (
                           <motion.div
                             key={index}
                             initial={{ opacity: 0, x: -10 }}
@@ -220,8 +299,19 @@ const ThreatModal = ({ threat, isOpen, onClose, onSave, isSaved = false }) => {
                           </motion.div>
                         ))}
                       </div>
-                    </motion.div>
-                  )}
+                    ) : (
+                      <div className="text-gray-600 text-sm flex items-center">
+                        <LightBulbIcon className="h-4 w-4 mr-2" />
+                        No AI recommendations available for this threat.
+                        <button 
+                          onClick={fetchAIAdvice}
+                          className="ml-2 text-blue-600 underline hover:text-blue-800"
+                        >
+                          Generate AI Advice
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
 
                   {/* Mini Trend Chart Placeholder */}
                   <motion.div

@@ -209,3 +209,23 @@ Q. How to implement ?
 3. SmsUtil
 4. Update the UserModel for this Field like mobile, isVerified, googleId
 5. Update AuthController
+
+
+
+
+
+
+
+
+
+1. Frontend --> react ---> npm i ---> npm start 
+2. backend 
+    1. fastapi
+        venv > requirement.txt 
+        uvicorn server.main:app --reload
+    2. nodejs 
+        npm i
+        npm start || nodemon
+    3. redis 
+        wsl redis install 
+        command ==> redis-cli 

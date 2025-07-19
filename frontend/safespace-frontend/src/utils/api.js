@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-const FASTAPI_BASE_URL = process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8001';
+const FASTAPI_BASE_URL = process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000';
 
 // Create axios instances
 export const nodeAPI = axios.create({
@@ -12,7 +12,7 @@ export const nodeAPI = axios.create({
 
 export const fastAPI = axios.create({
   baseURL: FASTAPI_BASE_URL,
-  timeout: 15000, // Increased to 15 second timeout for AI processing
+  timeout: 30000, // Increased to 15 second timeout for AI processing
 });
 
 // Add response interceptor for error handling
@@ -60,30 +60,28 @@ export const getLocationFromIP = async () => {
 const activeRequests = new Map();
 
 // Get threats data from FastAPI with ML analysis
-export const getThreats = async (location = null) => {
+export const getThreats = async (location = null, page = 1, limit = 20) => {
   try {
     let url = '/api/threats';
-    const params = {};
+    const params = { page, limit };
     
-    const requestKey = location || 'default';
+    const requestKey = `${location || 'default'}-${page}-${limit}`;
     
-    // Check if there's already an active request for this location
+    // Check if there's already an active request for this location and page
     if (activeRequests.has(requestKey)) {
       console.log(`⏭️ Request already in progress for: ${requestKey}`);
       return await activeRequests.get(requestKey);
     }
     
-    console.log(`🔍 Fetching AI-powered threats for: ${location || 'user location'}`);
+    console.log(`🔍 Fetching AI-powered threats for: ${location || 'user location'} (page ${page}, limit ${limit})`);
     
     if (location) {
-      // If location is provided, add it as parameter
       if (typeof location === 'string') {
         params.city = location;
       } else if (location.city) {
         params.city = location.city;
       }
     } else {
-      // Get user's current location if not provided
       try {
         const userLocation = await getLocationFromIP();
         params.city = userLocation.city;
@@ -94,11 +92,10 @@ export const getThreats = async (location = null) => {
       }
     }
     
-    // Create the request promise
+    // Create the request promise with better error handling
     const requestPromise = (async () => {
-      // Add timeout handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout for ML processing
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // Increase to 25 seconds
       
       try {
         const response = await fastAPI.get(url, { 
@@ -107,16 +104,27 @@ export const getThreats = async (location = null) => {
         });
         clearTimeout(timeoutId);
         
-        // Transform the response to match frontend expectations
         const threatsData = response.data;
+        console.log('🔄 Transforming threats data:', threatsData);
+        
+        // Handle timeout response from backend
+        if (threatsData && threatsData.error === 'timeout') {
+          console.log('⏰ Backend timeout detected, returning fallback data');
+          return {
+            threats: [],
+            pagination: { page: 1, limit, total: 0, totalPages: 0, hasMore: false },
+            mlAvailable: true,
+            city: params.city,
+            isTimeout: true
+          };
+        }
         
         if (threatsData && threatsData.threats) {
-          console.log(`✅ Successfully fetched ${threatsData.threats.length} AI-analyzed threats`);
+          console.log(`✅ Successfully fetched ${threatsData.threats.length} of ${threatsData.total_threats} AI-analyzed threats (page ${threatsData.page})`);
           console.log(`🧠 ML Models Status: ${threatsData.ml_available ? 'Active' : 'Fallback mode'}`);
           
-          // Transform threats to match frontend format
           const transformedThreats = threatsData.threats.map((threat, index) => ({
-            id: threat.id || index + 1,
+            id: threat.id || `${page}-${index + 1}`,
             title: threat.title,
             summary: threat.description?.substring(0, 150) + '...' || threat.title,
             category: threat.category,
@@ -125,8 +133,8 @@ export const getThreats = async (location = null) => {
             timestamp: threat.publishedAt || new Date().toISOString(),
             description: threat.description || '',
             aiAdvice: threat.safety_advice || [],
-            coordinates: [28.6139, 77.2090], // Default coordinates - you can enhance this
-            affectedPeople: Math.floor(Math.random() * 10000) + 1000, // Estimated
+            coordinates: [28.6139, 77.2090],
+            affectedPeople: Math.floor(Math.random() * 10000) + 1000,
             source: threat.source || 'AI Analysis',
             url: threat.url || '',
             mlConfidence: threat.confidence || 0,
@@ -134,23 +142,45 @@ export const getThreats = async (location = null) => {
             mlAnalysis: threat.ml_analysis || null
           }));
           
-          return transformedThreats;
+          return {
+            threats: transformedThreats,
+            pagination: {
+              page: threatsData.page,
+              limit: threatsData.limit,
+              total: threatsData.total_threats,
+              totalPages: threatsData.total_pages,
+              hasMore: threatsData.has_more
+            },
+            mlAvailable: threatsData.ml_available,
+            city: threatsData.city
+          };
         }
         
-        return [];
+        return {
+          threats: [],
+          pagination: { page: 1, limit, total: 0, totalPages: 0, hasMore: false },
+          mlAvailable: false,
+          city: params.city
+        };
         
       } catch (fetchError) {
         clearTimeout(timeoutId);
         
-        // Handle cancellation gracefully
+        // Don't throw cancellation errors, handle them gracefully
         if (fetchError.name === 'CanceledError' || fetchError.code === 'ERR_CANCELED') {
-          console.log('⏰ Request was canceled (timeout or abort)');
-          throw fetchError;
+          console.log('⏰ Request was canceled - returning cached or fallback data');
+          // Return empty data instead of throwing
+          return {
+            threats: [],
+            pagination: { page: 1, limit, total: 0, totalPages: 0, hasMore: false },
+            mlAvailable: false,
+            city: params.city,
+            isCanceled: true
+          };
         }
         
         throw fetchError;
       } finally {
-        // Remove from active requests when done
         activeRequests.delete(requestKey);
       }
     })();
@@ -165,7 +195,13 @@ export const getThreats = async (location = null) => {
     
     // For cancellation errors, re-throw without fallback
     if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-      throw error;
+      return {
+        threats: [],
+        pagination: { page: 1, limit, total: 0, totalPages: 0, hasMore: false },
+        mlAvailable: false,
+        city: location || 'Delhi',
+        isCanceled: true
+      };
     }
     
     // Determine the location for fallback data
@@ -174,7 +210,7 @@ export const getThreats = async (location = null) => {
     console.log(`🔄 Returning fallback data for ${fallbackLocation}`);
     
     // Return enhanced fallback mock data
-    return [
+    const fallbackThreats = [
       {
         id: 1,
         title: "Traffic Congestion Alert",
@@ -216,6 +252,125 @@ export const getThreats = async (location = null) => {
         mlDetected: false
       }
     ];
+    
+    return {
+      threats: fallbackThreats,
+      pagination: { page: 1, limit, total: fallbackThreats.length, totalPages: 1, hasMore: false },
+      mlAvailable: false,
+      city: fallbackLocation
+    };
+  }
+};
+
+// Get heatmap data for threat visualization
+export const getThreatHeatmap = async (cities = null) => {
+  try {
+    let url = '/api/threats/heatmap';
+    const params = {};
+    
+    if (cities) {
+      params.cities = Array.isArray(cities) ? cities.join(',') : cities;
+    }
+    
+    console.log('🗺️ Fetching threat heatmap data...');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout for heatmap
+    
+    try {
+      const response = await fastAPI.get(url, { 
+        params,
+        signal: controller.signal 
+      });
+      clearTimeout(timeoutId);
+      
+      const heatmapData = response.data;
+      
+      if (heatmapData && heatmapData.heatmap_data) {
+        console.log(`✅ Successfully fetched heatmap data for ${heatmapData.total_cities} cities`);
+        return {
+          success: true,
+          data: heatmapData.heatmap_data,
+          totalCities: heatmapData.total_cities,
+          mlAvailable: heatmapData.ml_available,
+          generatedAt: heatmapData.generated_at
+        };
+      }
+      
+      return {
+        success: false,
+        data: [],
+        message: 'No heatmap data available'
+      };
+      
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'CanceledError' || fetchError.code === 'ERR_CANCELED') {
+        console.log('⏰ Heatmap request was canceled (timeout)');
+        throw fetchError;
+      }
+      
+      throw fetchError;
+    }
+    
+  } catch (error) {
+    console.error('❌ Failed to fetch heatmap data:', error.message);
+    
+    // For cancellation errors, re-throw without fallback
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      throw error;
+    }
+    
+    // Return fallback heatmap data
+    console.log('🔄 Returning fallback heatmap data');
+    
+    const fallbackHeatmapData = [
+      {
+        id: 1,
+        city: 'Delhi',
+        coordinates: [77.2090, 28.6139],
+        threatLevel: 'high',
+        threatCount: 15,
+        recentThreats: ['Air pollution alert', 'Traffic congestion', 'Construction hazard'],
+        highRiskCount: 5,
+        mediumRiskCount: 7,
+        lowRiskCount: 3,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 2,
+        city: 'Mumbai',
+        coordinates: [72.8777, 19.0760],
+        threatLevel: 'medium',
+        threatCount: 8,
+        recentThreats: ['Heavy rainfall warning', 'Local flooding'],
+        highRiskCount: 2,
+        mediumRiskCount: 4,
+        lowRiskCount: 2,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 3,
+        city: 'Bangalore',
+        coordinates: [77.5946, 12.9716],
+        threatLevel: 'low',
+        threatCount: 3,
+        recentThreats: ['Minor road closure'],
+        highRiskCount: 0,
+        mediumRiskCount: 1,
+        lowRiskCount: 2,
+        lastUpdated: new Date().toISOString()
+      }
+    ];
+    
+    return {
+      success: true,
+      data: fallbackHeatmapData,
+      totalCities: fallbackHeatmapData.length,
+      mlAvailable: false,
+      isFallback: true
+    };
   }
 };
 
