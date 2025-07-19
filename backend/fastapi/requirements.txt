@@ -8,4 +8,4 @@ joblib
 onnxruntime
 pydantic
 gdown
-dateutil
+python-dateutil
