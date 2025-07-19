@@ -2,44 +2,36 @@ const router = require("express").Router();
 const authController = require("../Controller/AuthController");
 const zodValidationMiddleware = require("../Middleware/ZodValidationMiddleware");
 const UserValidationSchema = require("../ValidationSchema/UserValidationSchema");
-const rateLimitMiddleware = require("../Middleware/RateLimitMiddleware");
 const passport = require("passport");
 const jwtUtil = require("../Utils/JwtUtil");
 const UserModel = require("../Model/UserModel");
 
-
-const authRateLimit = rateLimitMiddleware(5, 60); // 5 requests per minute
-const generalRateLimit = rateLimitMiddleware(20, 60); // 20 requests per minute
-
-
 // Registration - with validation
-router.post("/register", authRateLimit, zodValidationMiddleware(UserValidationSchema), authController.addUser)
+router.post("/register", zodValidationMiddleware(UserValidationSchema), authController.addUser)
 
 // Login routes
 // 1. login with Email + Password 
-router.post("/login/email-password", authRateLimit, authController.loginUserWithEmailPassword);
+router.post("/login/email-password",  authController.loginUserWithEmailPassword);
 
 // 2. login with Mobile + Password 
-router.post("/login/mobile-password", authRateLimit, authController.loginUserWithMobilePassword);
+router.post("/login/mobile-password", authController.loginUserWithMobilePassword);
 
 // 3. login with Email + OTP 
-router.post("/login/email-otp/send", authRateLimit, authController.loginUserWithEmailOTP)
-router.post("/login/email-otp/verify", authRateLimit, authController.verifyEmailOTP);
+router.post("/login/email-otp/send",  authController.loginUserWithEmailOTP)
+router.post("/login/email-otp/verify", authController.verifyEmailOTP);
 
 // 4. login with Mobile + OTP 
-router.post("/login/mobile-otp/send", authRateLimit, authController.loginUserWithMobileOTP);
-router.post("/login/mobile-otp/verify", authRateLimit, authController.verifyMobileOTP);
+router.post("/login/mobile-otp/send", authController.loginUserWithMobileOTP);
+router.post("/login/mobile-otp/verify", authController.verifyMobileOTP);
 
 // 5. Google OAuth Login With Passport
 router.get("/google", 
-    generalRateLimit,
     passport.authenticate("google", { 
         scope: ["profile", "email"] 
     })
 );
 
 router.get("/google/callback", 
-    generalRateLimit,
     passport.authenticate("google", { session: false }),
     async (req, res) => {
         try {
@@ -81,14 +73,14 @@ router.get("/google/callback",
 );
 
 // Token and session management
-router.post("/refresh-token", generalRateLimit, authController.refreshAccessToken);
-router.post("/refreshAccessToken", generalRateLimit, authController.refreshAccessToken);
-router.post("/logout", generalRateLimit, authController.enhancedLogoutUser); 
+router.post("/refresh-token", authController.refreshAccessToken);
+router.post("/refreshAccessToken", authController.refreshAccessToken);
+router.post("/logout", authController.enhancedLogoutUser); 
 
 // Password management
-router.post("/forgot-password", authRateLimit, authController.forgetPassword);
-router.post("/reset-password", authRateLimit, authController.resetPassword);
-router.post("/change-password", authRateLimit, authController.changePassword);
+router.post("/forgot-password", authController.forgetPassword);
+router.post("/reset-password", authController.resetPassword);
+router.post("/change-password", authController.changePassword);
 
 // User profile management
 router.get("/me", authController.getCurrentUser);
