@@ -1,5 +1,6 @@
 import os
 import joblib
+import onnxruntime as ort
 import numpy as np
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -7,14 +8,6 @@ import logging
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 import warnings
-
-# Try to import onnxruntime, handle gracefully if not available
-try:
-    import onnxruntime as ort
-    ONNX_AVAILABLE = True
-except ImportError:
-    logger.warning("ONNX Runtime not available - ONNX models will be skipped")
-    ONNX_AVAILABLE = False
 
 # Suppress sklearn warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -78,7 +71,7 @@ class MLManager:
                 logger.error(f"❌ Sentiment model not found: {self.model_paths['sentiment']}")
             
             # Load ONNX context classifier
-            if ONNX_AVAILABLE and self.model_paths["context"].exists():
+            if self.model_paths["context"].exists():
                 try:
                     self.onnx_session = ort.InferenceSession(
                         str(self.model_paths["context"]),
@@ -88,12 +81,8 @@ class MLManager:
                 except Exception as e:
                     logger.warning(f"⚠️ Failed to load ONNX model: {e}")
                     self.onnx_session = None
-            elif not ONNX_AVAILABLE:
-                logger.info("ℹ️ ONNX Runtime not available - skipping ONNX model")
-                self.onnx_session = None
             else:
                 logger.error(f"❌ ONNX model not found: {self.model_paths['context']}")
-                self.onnx_session = None
             
             # Check if models are loaded
             models_available = [

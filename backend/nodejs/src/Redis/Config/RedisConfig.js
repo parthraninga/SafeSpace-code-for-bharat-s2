@@ -2,18 +2,51 @@ const Redis = require("ioredis");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const useTLS = process.env.REDIS_TLS === "true";
+// Parse Redis URL for deployment environments
+let redisConfig;
 
-const redisConnection = new Redis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null, 
-});
+if (process.env.REDIS_URL) {
+  // For deployment environments (like Render) with Redis URL
+  redisConfig = new Redis(process.env.REDIS_URL, {
+    maxRetriesPerRequest: 3,
+    retryDelayOnFailover: 100,
+    enableReadyCheck: false,
+    maxLoadingTimeout: 0,
+    lazyConnect: true,
+    tls: process.env.REDIS_TLS === "true" ? {} : undefined,
+    // Add error handling configuration
+    connectTimeout: 10000,
+    commandTimeout: 5000,
+  });
+} else {
+  // For local development
+  redisConfig = new Redis({
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    maxRetriesPerRequest: 3,
+    retryDelayOnFailover: 100,
+    enableReadyCheck: false,
+    maxLoadingTimeout: 0,
+    lazyConnect: true,
+  });
+}
 
-redisConnection.on("connect", () => {
+redisConfig.on("connect", () => {
   console.log("✅ Redis connected successfully");
 });
 
-redisConnection.on("error", (error) => {
+redisConfig.on("error", (error) => {
   console.error(`❌ Redis connection error: ${error.message}`);
+  // Don't exit process on Redis error to prevent app crash
 });
 
-module.exports = redisConnection;
+redisConfig.on("reconnecting", () => {
+  console.log("🔄 Redis reconnecting...");
+});
+
+redisConfig.on("ready", () => {
+  console.log("✅ Redis ready for commands");
+});
+
+module.exports = redisConfig;
