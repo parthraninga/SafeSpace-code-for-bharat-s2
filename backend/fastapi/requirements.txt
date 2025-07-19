@@ -10,3 +10,4 @@ pydantic
 gdown
 python-dateutil
 transformers
+torch
