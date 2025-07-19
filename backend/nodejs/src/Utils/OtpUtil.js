@@ -1,7 +1,4 @@
-const redisConnection = require("../Redis/Config/RedisConfig")
-const Redis = require("ioredis")
-
-const redisClient = new Redis(redisConnection)
+const redisClient = require("../Redis/Config/RedisConfig")
 
 // Generate 6-Digit OTP 
 const generateOTP = ()=> {
