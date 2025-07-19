@@ -45,11 +45,7 @@ app.add_middleware(
 app.include_router(threats_router, prefix="/api/threats", tags=["threats"])
 app.include_router(models_router, prefix="/api/models", tags=["models"])
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Downloading models on startup...")
-    await model_downloader.download_all_models()
-    logger.info("✅ Model download completed.")
+
     
 @app.get("/")
 async def root():
