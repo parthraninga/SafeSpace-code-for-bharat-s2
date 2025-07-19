@@ -26,8 +26,7 @@ if (process.env.REDIS_URL) {
     retryDelayOnClusterDown: 300,
     retryDelayOnFailover: 200,
     maxRetriesPerRequest: null,
-    // Additional cloud-specific settings
-    enableOfflineQueue: false,
+    // Remove enableOfflineQueue to allow default behavior
     // Connection stability
     dropBufferSupport: false,
   });

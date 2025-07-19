@@ -33,7 +33,7 @@ app.use(PassportUtil.initialize());
 
 const mongoose = require("mongoose");
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // app.listen(PORT, () => {
 //     console.log(`Server is running on port ${PORT}`);
@@ -62,7 +62,12 @@ app.use("/upload", uploadRoutes); // for file upload
 
 // Simple health check endpoint
 app.get("/", (req, res) => {
-    res.json({ message: "SafeSpace Node.js API is running", port: 3001 });
+    res.json({ 
+        message: "SafeSpace Node.js API is running", 
+        port: PORT,
+        timestamp: new Date().toISOString(),
+        status: "healthy"
+    });
 });
 
 mongoose
