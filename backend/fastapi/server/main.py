@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.routes.threats import router as threats_router
 from server.routes.models import router as models_router
 from server.core.ml_manager import MLManager
+from server.core import model_downloader
 import os
 from dotenv import load_dotenv
 import logging
@@ -44,6 +45,12 @@ app.add_middleware(
 app.include_router(threats_router, prefix="/api/threats", tags=["threats"])
 app.include_router(models_router, prefix="/api/models", tags=["models"])
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Downloading models on startup...")
+    await model_downloader.download_all_models()
+    logger.info("✅ Model download completed.")
+    
 @app.get("/")
 async def root():
     return {
